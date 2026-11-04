@@ -9,7 +9,7 @@ How to run:
 1. Download or clone this repo.
 2. Open 'index.html' and run.
 
-# Languaage and Framework
+# Language and Framework
 **Plain HTML, CSS and JavaScript with no framework.
 - This project is small, so a framework would just be more work without adding any benefit.
 - The user has nothing to install in order for this project to work as it is only a web based SAP-1 simulator.
