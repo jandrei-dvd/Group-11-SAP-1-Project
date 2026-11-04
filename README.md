@@ -10,7 +10,7 @@ How to run:
 2. Open 'index.html' and run.
 
 # Language and Framework
-**Plain HTML, CSS and JavaScript with no framework.
+Plain HTML, CSS and JavaScript with no framework.
 - This project is small, so a framework would just be more work without adding any benefit.
 - The user has nothing to install in order for this project to work as it is only a web based SAP-1 simulator.
 - The CPU model is written with no DOM code, which keeps the backend and frontend seperated and makes the logic testable in NODE.
