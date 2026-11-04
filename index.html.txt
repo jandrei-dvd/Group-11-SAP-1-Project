@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SAP-1 Simulator</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>SAP-1 Simulator</h1>
+    <div class="controls">
+      <button id="btnStep" title="Execute one full instruction">Step</button>
+      <button id="btnTick" title="Execute one T-state (clock pulse)">T-State</button>
+      <button id="btnRun" class="primary">Run</button>
+      <button id="btnReset">Reset</button>
+      <label class="speed">Delay <input id="speed" type="range" min="50" max="1200" step="50" value="400">
+        <span id="speedVal">400 ms</span></label>
+    </div>
+  </header>
+
+  <main>
+    <section class="diagram">
+      <div class="row top" id="rowTop"></div>
+      <div class="bus" id="bus">
+        <span class="bus-name">W-BUS</span>
+        <span class="bus-bits" id="busBits">--------</span>
+        <span class="bus-info" id="busInfo">idle</span>
+      </div>
+      <div class="row bottom" id="rowBottom"></div>
+
+      <div class="status">
+        <div class="box"><h4>Ring counter</h4><div id="tstates" class="tstates"></div></div>
+        <div class="box grow"><h4>Control signals</h4><div id="signals" class="signals"></div></div>
+      </div>
+      <div class="box"><h4>Execution log</h4><ol id="log" class="log"></ol></div>
+    </section>
+
+    <aside>
+      <div class="box" id="p-RAM">
+        <h4>RAM (16 x 8)</h4>
+        <table id="ramTable"><thead><tr><th>Addr</th><th>Binary</th><th>Hex</th><th>Decoded</th></tr></thead><tbody></tbody></table>
+      </div>
+
+      <div class="box">
+        <h4>Load program</h4>
+        <div class="quick">
+          <span>A</span><input id="qa" value="25" maxlength="2">
+          <span>B</span><input id="qb" value="05" maxlength="2">
+          <span>C</span><input id="qc" value="23" maxlength="2">
+          <button id="btnQuick">Build A + B &minus; C</button>
+        </div>
+        <table id="editor"><thead><tr><th>Addr</th><th>Instruction</th><th>Operand / data (hex)</th></tr></thead><tbody></tbody></table>
+        <div class="row-btns">
+          <button id="btnLoad" class="primary">Load into RAM</button>
+          <button id="btnClear">Clear</button>
+        </div>
+        <div id="msg" class="msg"></div>
+      </div>
+    </aside>
+  </main>
+
+  <script src="sap1.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
