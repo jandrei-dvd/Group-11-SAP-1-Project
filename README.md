@@ -9,8 +9,8 @@ How to run:
 1. Download or clone this repo.
 2. Open 'index.html' and run.
 
-# Language and Framework
-Plain HTML, CSS and JavaScript with no framework.
+## Language and Framework
+  Plain HTML, CSS and JavaScript with no framework.
 - This project is small, so a framework would just be more work without adding any benefit.
 - The user has nothing to install in order for this project to work as it is only a web based SAP-1 simulator.
 - The CPU model is written with no DOM code, which keeps the backend and frontend seperated and makes the logic testable in NODE.
@@ -24,9 +24,9 @@ Plain HTML, CSS and JavaScript with no framework.
 | `app.js` | **Frontend.** Draws registers/bus/LEDs/RAM, wires buttons, program loader. |
 
 # How to use
-1. Type the three hex values in A, B, C and click Build A + B - C, or build any program manually in the "Load Program table", then click "Load to RAM".
-2. "Step" runs one full instruction which is animated by T-state to T-state, "T-state" runs a single clock pulse, "Run" executes until the HLT executes, "Reset" clears the registers but not the RAM.
-3. Use the "Delay" slider to change the speed of the execution to follow it easily.
+1. Type a formula (e.g. `A + B - C`, `A - B + C`, `A + B + C`), enter a hex value for each variable that appears, and click **Build program from formula**. Or build any program manually in the table and click **Load into RAM**. Formulas are evaluated left to right using only + and -.
+2. **Step** runs one full instruction (animated T-state by T-state), **T-State** runs a single clock pulse, **Run** executes until HLT, **Reset** clears registers (RAM is kept).
+3. Use the **Delay** slider to change the processing speed in Run/Step.
 
 # Instruction Set
 | Mnemonic | Opcode | Operation |
