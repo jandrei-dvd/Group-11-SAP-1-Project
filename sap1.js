@@ -1,18 +1,3 @@
-/* ===========================================================
- * sap1.js  -  BACKEND: SAP-1 architecture model (no DOM code)
- * -----------------------------------------------------------
- * Registers : PC(4) MAR(4) IR(8) A(8) B(8) OUT(8)
- * Memory    : 16 x 8 RAM
- * ALU       : adder/subtractor (2's complement, 8-bit)
- * Controller: 6-state ring counter (T1..T6)
- *   Fetch   T1: PC  -> bus -> MAR        (Ep, Lm)
- *           T2: PC = PC + 1              (Cp)
- *           T3: RAM -> bus -> IR         (CE, Li)
- *   Execute T4-T6 depend on the opcode (see tick()).
- * Each call to tick() advances exactly ONE T-state and returns
- * an event object that the GUI uses to animate the bus.
- * =========================================================== */
-
 const OPCODES = { LDA: 0x0, ADD: 0x1, SUB: 0x2, OUT: 0xE, HLT: 0xF };
 const MNEMONICS = { 0x0: 'LDA', 0x1: 'ADD', 0x2: 'SUB', 0xE: 'OUT', 0xF: 'HLT' };
 const hex = (v, n = 2) => v.toString(16).toUpperCase().padStart(n, '0');
@@ -22,32 +7,27 @@ class SAP1 {
     this.ram = new Array(16).fill(0);
     this.resetRegisters();
   }
-
-  /** Clear all registers + controller. RAM (the program) is kept. */
+  
   resetRegisters() {
     this.pc = 0; this.mar = 0; this.ir = 0;
     this.a = 0; this.b = 0; this.out = 0;
-    this.t = 1;                 // ring counter, 1..6
+    this.t = 1;                 
     this.halted = false;
-    this.irValid = false;       // true once the first instruction is fetched
+    this.irValid = false;       
     this.error = null;
-    this.aluMode = 'ADD';       // last ALU operation (for display)
+    this.aluMode = 'ADD';       
     this.instrCount = 0;
   }
-
-  /** Replace RAM contents (array of 16 bytes). */
+  
   loadRam(bytes) {
     this.ram = Array.from({ length: 16 }, (_, i) => (bytes[i] || 0) & 0xFF);
   }
-
-  /** Current adder/subtractor output (always A +/- B, mod 256). */
+  
   get alu() {
-    // Subtraction uses 2's complement: A - B = A + (NOT B) + 1
     return this.aluMode === 'SUB' ? (this.a + ((~this.b) & 0xFF) + 1) & 0xFF
                                   : (this.a + this.b) & 0xFF;
   }
-
-  /** Advance one T-state. Returns an event, or null if halted. */
+  
   tick() {
     if (this.halted) return null;
 
@@ -58,7 +38,7 @@ class SAP1 {
     const memOp = opcode === OPCODES.LDA || opcode === OPCODES.ADD || opcode === OPCODES.SUB;
 
     switch (this.t) {
-      /* ---------------- FETCH CYCLE ---------------- */
+      /* cycle*/
       case 1:   // PC -> MAR
         ev.bus = this.pc; this.mar = this.pc;
         ev.signals = ['Ep', 'Lm']; ev.from = 'PC'; ev.to = 'MAR';
@@ -75,7 +55,7 @@ class SAP1 {
         ev.text = `RAM[${hex(this.mar, 1)}H] = ${hex(ev.bus)}H -> W-Bus -> IR`;
         break;
 
-      /* --------------- EXECUTE CYCLE --------------- */
+      /*execute cycle*/
       case 4:
         if (memOp) {                      // IR operand -> MAR
           ev.bus = operand; this.mar = operand;
