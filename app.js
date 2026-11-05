@@ -3,7 +3,7 @@ const $ = id => document.getElementById(id);
 const bin = (v, n) => v.toString(2).padStart(n, '0');
 const fmtBin = (v, n) => n === 8 ? bin(v, 8).replace(/(\d{4})(\d{4})/, '$1 $2') : bin(v, n);
 
-
+/*Block Diagram: */
 const PANELS = [
   { id: 'PC',  title: 'Program Counter (PC)',    bits: 4, row: 'rowTop',    get: () => cpu.pc },
   { id: 'MAR', title: 'Memory Address Reg (MAR)', bits: 4, row: 'rowTop',    get: () => cpu.mar },
@@ -27,7 +27,7 @@ $('signals').innerHTML = SIGNALS.map(s => `<span data-s="${s}">${s}</span>`).joi
 $('tstates').innerHTML = [1, 2, 3, 4, 5, 6].map(n => `<span data-t="${n}">T${n}</span>`).join('');
 $('ramTable').tBody = $('ramTable').querySelector('tbody');
 
-
+/*Painting: */
 function decode(byte) {
   const op = byte >> 4, arg = byte & 15;
   if (op in MNEMONICS) return (op === 0xE || op === 0xF) ? MNEMONICS[op] : `${MNEMONICS[op]} ${hex(arg, 1)}H`;
@@ -35,7 +35,7 @@ function decode(byte) {
 }
 
 function paint(ev) {
-  
+  // registers
   PANELS.forEach(p => {
     const v = p.get(), el = $('p-' + p.id);
     el.querySelector('.bin').textContent = fmtBin(v, p.bits);
@@ -49,7 +49,7 @@ function paint(ev) {
   $('p-ALU').querySelector('.extra').textContent = cpu.aluMode === 'SUB' ? 'A - B (2\'s complement)' : 'A + B';
   document.querySelectorAll('#p-OUT .led').forEach((led, i) => led.classList.toggle('on', (cpu.out >> (7 - i)) & 1));
 
- 
+  // highlights, bus, signals
   document.querySelectorAll('.src, .dst').forEach(e => e.classList.remove('src', 'dst'));
   const bus = $('bus');
   if (ev && ev.bus !== null) {
@@ -73,7 +73,7 @@ function paint(ev) {
   $('btnRun').disabled = cpu.halted;
 }
 
-let kinds = new Array(16).fill('DATA');   
+let kinds = new Array(16).fill('DATA');   // kung san na enter na row si ram
 function paintRam(ev) {
   const hit = ev ? ev.ram : null;
   $('ramTable').tBody.innerHTML = cpu.ram.map((v, i) =>
@@ -96,7 +96,7 @@ function logEvent(ev) {
   $('log').scrollTop = $('log').scrollHeight;
 }
 
-
+/*Execution Control*/
 let running = false, timer = null;
 const delay = () => +$('speed').value;
 
@@ -134,7 +134,7 @@ $('btnReset').onclick = () => {
 };
 $('speed').oninput = () => $('speedVal').textContent = delay() + ' ms';
 
-
+/*Program Loader*/
 const MNS = ['LDA', 'ADD', 'SUB', 'OUT', 'HLT', 'DATA'];
 const edBody = $('editor').querySelector('tbody');
 for (let i = 0; i < 16; i++) {
@@ -160,7 +160,7 @@ function setRow(i, mn, val) {
 }
 function showMsg(t, err) { $('msg').textContent = t; $('msg').className = 'msg ' + (err ? 'err' : 'ok'); }
 
-
+/**Read, validate, encode*/
 function readEditor() {
   const bytes = []; let ok = true;
   [...edBody.children].forEach((r, i) => {
@@ -180,7 +180,6 @@ function readEditor() {
   return ok ? bytes : null;
 }
 
-
 $('btnLoad').onclick = () => {
   const bytes = readEditor();
   if (!bytes) return showMsg('Fix the highlighted fields (hex only; address 0-F, data 00-FF).', true);
@@ -192,15 +191,47 @@ $('btnLoad').onclick = () => {
 };
 $('btnClear').onclick = () => { for (let i = 0; i < 16; i++) setRow(i, 'DATA', ''); showMsg('Editor cleared. Press "Load into RAM" to apply.', false); };
 
+/* Formula builder: */
+const defaults = { A: '25', B: '05', C: '23' };
+function parseFormula() {
+  const f = $('formula').value.toUpperCase().replace(/\u2212/g, '-').replace(/\s+/g, '');
+  if (!/^[A-Z]([+-][A-Z])*$/.test(f)) return null;
+  const terms = [{ sign: '+', v: f[0] }];
+  for (let i = 1; i < f.length; i += 2) terms.push({ sign: f[i], v: f[i + 1] });
+  return terms;
+}
+function syncVars() {
+  const box = $('vars'), old = {};
+  box.querySelectorAll('input').forEach(i => old[i.dataset.v] = i.value);
+  box.innerHTML = '';
+  const t = parseFormula();
+  if (!t) return;
+  [...new Set(t.map(x => x.v))].forEach(v => {
+    const lab = document.createElement('label');
+    lab.innerHTML = `${v} <input data-v="${v}" maxlength="2" value="${old[v] ?? defaults[v] ?? '00'}">`;
+    box.appendChild(lab);
+  });
+}
+$('formula').oninput = syncVars;
 
 $('btnQuick').onclick = () => {
-  const vals = ['qa', 'qb', 'qc'].map(id => $(id).value.trim());
-  if (!vals.every(v => /^[0-9a-f]{1,2}$/i.test(v))) return showMsg('A, B and C must be 1-2 hex digits.', true);
+  const t = parseFormula();
+  if (!t) return showMsg('Formula: letters joined by + or - only, starting with a letter (e.g. A - B + C).', true);
+  const vars = [...new Set(t.map(x => x.v))], vals = {};
+  for (const inp of $('vars').querySelectorAll('input')) {
+    if (!/^[0-9a-f]{1,2}$/i.test(inp.value.trim())) return showMsg('Each value must be 1-2 hex digits (00-FF).', true);
+    vals[inp.dataset.v] = inp.value.trim().toUpperCase();
+  }
+  const start = Math.max(t.length + 2, 9);            // data goes after HLT (at 9H like the sample)
+  if (start + vars.length > 16) return showMsg('Formula too long for the 16-byte RAM.', true);
+  const addr = {}; vars.forEach((v, i) => addr[v] = start + i);
   for (let i = 0; i < 16; i++) setRow(i, 'DATA', '');
-  setRow(0, 'LDA', '9'); setRow(1, 'ADD', 'A'); setRow(2, 'SUB', 'B'); setRow(3, 'OUT', ''); setRow(4, 'HLT', '');
-  setRow(9, 'DATA', vals[0].toUpperCase()); setRow(10, 'DATA', vals[1].toUpperCase()); setRow(11, 'DATA', vals[2].toUpperCase());
+  t.forEach((x, i) => setRow(i, i === 0 ? 'LDA' : x.sign === '+' ? 'ADD' : 'SUB', hex(addr[x.v], 1)));
+  setRow(t.length, 'OUT', ''); setRow(t.length + 1, 'HLT', '');
+  vars.forEach(v => setRow(addr[v], 'DATA', vals[v]));
   $('btnLoad').click();
 };
 
-/* ---------- start-up ---------- */
+/* Istart-up*/
+syncVars();
 $('btnQuick').click();
