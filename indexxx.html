@@ -44,11 +44,10 @@
 
       <div class="box">
         <h4>Load program</h4>
-        <div class="quick">
-          <span>A</span><input id="qa" value="25" maxlength="2">
-          <span>B</span><input id="qb" value="05" maxlength="2">
-          <span>C</span><input id="qc" value="23" maxlength="2">
-          <button id="btnQuick">Build A + B &minus; C</button>
+        <div class="formula">
+          <label>Formula <input id="formula" value="A + B - C" spellcheck="false"></label>
+          <div id="vars" class="vars"></div>
+          <button id="btnQuick">Build program from formula</button>
         </div>
         <table id="editor"><thead><tr><th>Addr</th><th>Instruction</th><th>Operand / data (hex)</th></tr></thead><tbody></tbody></table>
         <div class="row-btns">
